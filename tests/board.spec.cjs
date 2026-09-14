@@ -78,3 +78,24 @@ test('adding a card in one browser tab appears in another automatically', async 
     await contextA.close();
     await contextB.close();
 });
+
+test('dragging a card to another column moves it there', async ({ page }) => {
+    const boardPage = new BoardPage(page);
+    await boardPage.goto();
+
+    const cardText = createTestCardText('Move me');
+    await boardPage.addCard('To Do', cardText);
+
+    await boardPage.dragCard(cardText, 'In Progress');
+
+    const inProgressColumn = boardPage.getColumn('In Progress');
+    await expect(inProgressColumn).toContainText(cardText);
+
+    const toDoColumn = boardPage.getColumn('To Do');
+    await expect(toDoColumn).not.toContainText(cardText);
+
+    // ------------------------------------------------
+    // CLEAN UP TEST CARD
+    // ------------------------------------------------
+    await boardPage.deleteCard(cardText);
+});

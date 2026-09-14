@@ -58,6 +58,35 @@ class BoardPage {
         await card.locator('button:has-text("Delete")').click();
         await responsePromise;
     }
+
+    async dragCard(cardText, targetColumnTitle) {
+    const card = this.getCard(cardText);
+    const targetColumn = this.getColumn(targetColumnTitle);
+
+    const cardBox = await card.boundingBox();
+    const targetBox = await targetColumn.boundingBox();
+
+    const startX = cardBox.x + cardBox.width / 2;
+    const startY = cardBox.y + cardBox.height / 2;
+    const endX = targetBox.x + targetBox.width / 2;
+    const endY = targetBox.y + targetBox.height / 2;
+
+    const responsePromise = this.page.waitForResponse(resp =>
+        resp.url().includes('/api/columns/') &&
+        resp.request().method() === 'PATCH'
+    );
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    // A small initial move is required to cross the library's internal
+    // "this is actually a drag, not a click" threshold
+    await this.page.mouse.move(startX + 10, startY + 10, { steps: 5 });
+    await this.page.mouse.move(endX, endY, { steps: 10 });
+    await this.page.mouse.move(endX, endY, { steps: 5 });
+    await this.page.mouse.up();
+
+    await responsePromise;
+}
 }
 
 module.exports = BoardPage;
