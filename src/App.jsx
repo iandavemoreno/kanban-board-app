@@ -2,13 +2,24 @@ import { useState, useEffect } from 'react'
 import { DragDropContext } from '@hello-pangea/dnd'
 import Column from './Column'
 import './App.css'
+import { io } from 'socket.io-client'
 
 function App() {
   const [columns, setColumns] = useState([])
 
-  useEffect(() => {
+ useEffect(() => {
     loadBoard()
-  }, [])
+
+    const socket = io()
+
+    socket.on('board-updated', function () {
+      loadBoard()
+    })
+
+    return function () {
+      socket.disconnect()
+    }
+}, [])
 
   function loadBoard() {
     fetch('/api/board')

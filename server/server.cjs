@@ -1,7 +1,12 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const db = require('./db.cjs');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
 const PORT = 3003;
 
 app.use(express.json());
@@ -40,6 +45,8 @@ app.post('/api/cards', (req, res) => {
     const insert = db.prepare('INSERT INTO cards (column_id, text, position) VALUES (?, ?, ?)');
     const result = insert.run(column_id, text.trim(), maxPosition.maxPos + 1);
 
+    io.emit('board-updated');
+
     res.status(201).json({
         id: result.lastInsertRowid,
         column_id: column_id,
@@ -58,6 +65,9 @@ app.put('/api/cards/:id', (req, res) => {
     }
 
     db.prepare('UPDATE cards SET text = ? WHERE id = ?').run(text.trim(), id);
+
+    io.emit('board-updated');
+
     res.json({ id: Number(id), text: text.trim() });
 });
 
@@ -65,6 +75,9 @@ app.put('/api/cards/:id', (req, res) => {
 app.delete('/api/cards/:id', (req, res) => {
     const id = req.params.id;
     db.prepare('DELETE FROM cards WHERE id = ?').run(id);
+
+    io.emit('board-updated');
+
     res.json({ message: 'Card deleted.' });
 });
 
@@ -81,9 +94,19 @@ app.patch('/api/columns/:id/cards', (req, res) => {
         updatePosition.run(columnId, index, cardId);
     });
 
+    io.emit('board-updated');
+
     res.json({ message: 'Cards reordered.' });
 });
 
-app.listen(PORT, () => {
+io.on('connection', (socket) => {
+    console.log('A client connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('A client disconnected:', socket.id);
+    });
+});
+
+server.listen(PORT, () => {
     console.log('Server running on http://localhost:' + PORT);
 });
