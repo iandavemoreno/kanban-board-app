@@ -1,0 +1,64 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+}
+
+.board {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.column {
+  background: #eef1f5;
+  border-radius: 8px;
+  padding: 12px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.card-list {
+  min-height: 40px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.card-view {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-actions button {
+  font-size: 0.75rem;
+  margin-left: 4px;
+}
+
+.add-card-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.add-card-form input {
+  flex: 1;
+  padding: 6px;
+}
