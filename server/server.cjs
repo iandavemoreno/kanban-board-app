@@ -30,6 +30,58 @@ app.get('/api/board', (req, res) => {
     res.json(board);
 });
 
+// Add a new column
+app.post('/api/columns', (req, res) => {
+    const { title } = req.body;
+
+    if (!title || !title.trim()) {
+        return res.status(400).json({ error: 'Column title is required.' });
+    }
+
+    const maxPosition = db.prepare(
+        'SELECT COALESCE(MAX(position), -1) AS maxPos FROM columns'
+    ).get();
+
+    const insert = db.prepare('INSERT INTO columns (title, position) VALUES (?, ?)');
+    const result = insert.run(title.trim(), maxPosition.maxPos + 1);
+
+    io.emit('board-updated');
+
+    res.status(201).json({
+        id: result.lastInsertRowid,
+        title: title.trim(),
+        position: maxPosition.maxPos + 1
+    });
+});
+
+// Rename a column
+app.put('/api/columns/:id', (req, res) => {
+    const id = req.params.id;
+    const { title } = req.body;
+
+    if (!title || !title.trim()) {
+        return res.status(400).json({ error: 'Column title is required.' });
+    }
+
+    db.prepare('UPDATE columns SET title = ? WHERE id = ?').run(title.trim(), id);
+
+    io.emit('board-updated');
+
+    res.json({ id: Number(id), title: title.trim() });
+});
+
+// Delete a column and all of its cards
+app.delete('/api/columns/:id', (req, res) => {
+    const id = req.params.id;
+
+    db.prepare('DELETE FROM cards WHERE column_id = ?').run(id);
+    db.prepare('DELETE FROM columns WHERE id = ?').run(id);
+
+    io.emit('board-updated');
+
+    res.json({ message: 'Column deleted.' });
+});
+
 // Add a new card to a column
 app.post('/api/cards', (req, res) => {
     const { column_id, text } = req.body;

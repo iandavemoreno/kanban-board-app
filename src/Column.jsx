@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Droppable } from '@hello-pangea/dnd'
 import Card from './Card'
 
-function Column({ column, onAddCard, onEditCard, onDeleteCard }) {
+function Column({ column, onAddCard, onEditCard, onDeleteCard, onRenameColumn, onDeleteColumn }) {
   const [newCardText, setNewCardText] = useState('')
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editTitle, setEditTitle] = useState(column.title)
 
   function handleAddCard(event) {
     event.preventDefault()
@@ -16,9 +18,44 @@ function Column({ column, onAddCard, onEditCard, onDeleteCard }) {
     setNewCardText('')
   }
 
+  function handleSaveTitle() {
+    if (!editTitle.trim()) {
+      return
+    }
+
+    onRenameColumn(column.id, editTitle.trim())
+    setIsEditingTitle(false)
+  }
+
+  function handleCancelTitle() {
+    setEditTitle(column.title)
+    setIsEditingTitle(false)
+  }
+
   return (
     <div className="column">
-      <h2>{column.title}</h2>
+      {isEditingTitle ? (
+        <div className="column-title-edit">
+          <input
+            type="text"
+            value={editTitle}
+            onChange={function (event) {
+              setEditTitle(event.target.value)
+            }}
+            aria-label="Edit column title"
+          />
+          <button onClick={handleSaveTitle}>Save</button>
+          <button onClick={handleCancelTitle}>Cancel</button>
+        </div>
+      ) : (
+        <div className="column-header">
+          <h2>{column.title}</h2>
+          <div className="column-actions">
+            <button onClick={function () { setIsEditingTitle(true) }}>Rename</button>
+            <button onClick={function () { onDeleteColumn(column.id) }}>Delete</button>
+          </div>
+        </div>
+      )}
 
       <Droppable droppableId={String(column.id)}>
         {function (provided) {
